@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar ou deletar cadastros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: linear-gradient(to right, rgb(10, 100, 150), rgb(20, 150, 80));
+            color: whitesmoke;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .section-buttons {
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .section-buttons button {
+            padding: 8px;
+            border-radius: 4px;
+            background-color: rgb(0, 0, 0, 0.3);
+            color: whitesmoke;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .section-buttons button:hover {
+            background-color: rgb(75, 198, 133);
+        }
+        table {
+            margin: auto;
+            margin-bottom: 10px;
+        }
+        th, td {
+            padding: 4px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: rgb(0, 0, 0, 0.3);
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+       .actions-column a {
+            text-decoration: none;
+            color: white;
+            padding: 6px; 
+            background-color: rgb(0, 0, 0, 0.3);
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            display: inline-block;
+        }
+        .actions-column a:hover {
+            background-color: rgb(20, 150, 80);
+        }
+        input[type="submit"], a {
+            padding: 8px;
+            background-color: rgb(0, 0, 0, 0.3);
+            color: whitesmoke;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+        input[type="submit"]:hover, a:hover {
+            background-color: rgb(75, 198, 133);
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-container input[type="text"] {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            width: 60%; 
+            margin-right: -4px; 
+            box-sizing: border-box;
+        }
+        .search-container button {
+            padding: 8px 20px; 
+            border: none;
+            border-radius: 0 4px 4px 0;
+            background-color: rgb(0, 0, 0, 0.3);
+            color: whitesmoke;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-sizing: border-box;
+        }
+        .search-container button:hover {
+            background-color: rgb(75, 198, 133); 
+        }
+
+        .top-buttons button {
+            padding: 8px;
+            background-color: rgb(0, 0, 0, 0.3);
+            color: whitesmoke;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        .top-buttons button:hover {
+            background-color: rgb(75, 198, 133);
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Alunos</h1>
+    <div class="search-container">
+        <form action="sistema.php" method="GET">
+            <input type="text" id="pesquisar" name="search" placeholder="Pesquisar Aluno">
+            <button type="submit">Pesquisar</button>
+        </form>
+    </div>
+    <!-- Seção de Dados Pessoais -->
+    <div id="dados-pessoais" class="section">
+        <table>
+            <!-- Cabeçalho da tabela para dados pessoais -->
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>CPF</th>
+                    <th class="actions-column">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Listagem de dados pessoais aqui -->
+                <?php
+                    // Conexão com o banco de dados e consulta dos alunos
+                    include_once('config.php');
+
+                    // Inicializa o filtro de pesquisa
+                    $filtro_pesquisa = "";
+
+                    // Verifica se há parâmetro de pesquisa
+                    if(isset($_GET['search']) && !empty($_GET['search'])) {
+                        $pesquisa = $_GET['search'];
+                        // Evita SQL injection usando prepared statements
+                        $sql = "SELECT * FROM alunos WHERE nome LIKE ?";
+                        $stmt = $conexao->prepare($sql);
+                        // Adiciona o caractere % para permitir correspondência parcial
+                        $pesquisa = "%$pesquisa%";
+                        $stmt->bind_param("s", $pesquisa);
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                    } else {
+                        // Caso contrário, consulta todos os alunos
+                        $sql = "SELECT * FROM alunos";
+                        $result = $conexao->query($sql);
+                    }
+
+                    // Lista os alunos
+                    while($aluno = $result->fetch_assoc()) {
+                        echo "<tr>";
+                        echo "<td>".$aluno['id_alunos']."</td>";
+                        echo "<td>".$aluno['cpf']."</td>";
+
+                        // Adicione mais colunas com outros dados do aluno, se necessário
+                        echo "<td class='actions-column'>
+                            <a href='edit.php?id=".$aluno['id_alunos']."'>Editar/Visualizar</a>
+                            <a class="b" href='delete.php?id=".$aluno['id_alunos']."'>Excluir</a>
+                            </td>";
+                        echo "</tr>";
+                    }
+                ?>               
+            </tbody>
+        </table>
+        </div>
+    </div>
+     <div class="top-buttons">
+        <button onclick="window.location.href='formulario.php'">Cadastrar Novo Aluno</button>
+        <a href="home.php">Voltar</a>
+    </div>
+    <script>
+        function showSection(sectionId) {
+            // Oculta todas as seções
+            var sections = document.getElementsByClassName("section");
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].style.display = "none";
+            }
+            // Mostra apenas a seção clicada
+            document.getElementById(sectionId).style.display = "block";
+        }
+    </script>
+</body>
+</html>
